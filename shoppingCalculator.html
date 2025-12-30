@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物換算比較工具 - 兩兩比較模式 (含飲品多單位計算)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .input-box {
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .input-box:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .comparison-result {
+            background-color: #e0f2f7;
+            border: 2px solid #06b6d4;
+            transition: all 0.3s;
+        }
+        .better-a, .better-b {
+            /* 調整脈衝顏色以更亮眼 */
+            animation: pulse-border 1.5s infinite;
+            border-width: 2px;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+            50% { border-color: #0d9488; box-shadow: 0 0 15px rgba(13, 148, 136, 0.8); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#3b82f6',
+                        'primary-green': '#10b981',
+                        'primary-purple': '#8b5cf6',
+                        'highlight': '#0d9488',
+                    }
+                }
+            }
+        }
+
+        /**
+         * 核心比較函數：比較 A 和 B 兩產品的性價比 (數量/價格)
+         * @param {string} idPrefix - 區塊的 ID 前綴 (e.g., 'drink', 'weight', 'unit')
+         * @param {string} unit - 單位名稱 (e.g., '毫升', '克', '單位')
+         */
+        function compareProducts(idPrefix, unit) {
+            let valueA, priceA, valueB, priceB;
+
+            // --- 專為飲品 (drink) 區塊設計的邏輯 ---
+            if (idPrefix === 'drink') {
+                const countA = parseFloat(document.getElementById('drinkCountA').value);
+                const volumePerUnitA = parseFloat(document.getElementById('drinkVolumePerUnitA').value);
+                priceA = parseFloat(document.getElementById('drinkPriceA').value);
+                
+                const countB = parseFloat(document.getElementById('drinkCountB').value);
+                const volumePerUnitB = parseFloat(document.getElementById('drinkVolumePerUnitB').value);
+                priceB = parseFloat(document.getElementById('drinkPriceB').value);
+
+                // 計算總容量 (數量 * 單瓶容量)
+                valueA = countA * volumePerUnitA;
+                valueB = countB * volumePerUnitB;
+                
+            } else {
+                // --- 適用於重量 (weight) 和數量 (unit) 區塊的原始邏輯 ---
+                valueA = parseFloat(document.getElementById(`${idPrefix}ValueA`).value);
+                priceA = parseFloat(document.getElementById(`${idPrefix}PriceA`).value);
+                valueB = parseFloat(document.getElementById(`${idPrefix}ValueB`).value);
+                priceB = parseFloat(document.getElementById(`${idPrefix}PriceB`).value);
+            }
+
+            const resultElement = document.getElementById(`${idPrefix}ComparisonResult`);
+            const valueElementA = document.getElementById(`${idPrefix}ValuePerDollarA`);
+            const valueElementB = document.getElementById(`${idPrefix}ValuePerDollarB`);
+            const totalValueAElement = document.getElementById(`${idPrefix}TotalValueA`);
+            const totalValueBElement = document.getElementById(`${idPrefix}TotalValueB`);
+
+
+            // 檢查基本輸入
+            if (isNaN(valueA) || isNaN(priceA) || isNaN(valueB) || isNaN(priceB) || priceA <= 0 || priceB <= 0) {
+                resultElement.innerHTML = `<span class="text-red-600 font-medium text-center block">請在 A 和 B 產品中輸入有效的數量和價格 (&gt; 0)。</span>`;
+                valueElementA.textContent = `--- ${unit}/元`;
+                valueElementB.textContent = `--- ${unit}/元`;
+                if (totalValueAElement) totalValueAElement.textContent = `總容量: --- ${unit}`;
+                if (totalValueBElement) totalValueBElement.textContent = `總容量: --- ${unit}`;
+                
+                // 移除高亮
+                document.getElementById(`${idPrefix}BoxA`).classList.remove('better-a');
+                document.getElementById(`${idPrefix}BoxB`).classList.remove('better-b');
+                return;
+            }
+
+            // 1. 顯示總量 (僅飲品需要)
+            if (totalValueAElement) totalValueAElement.textContent = `總容量: ${valueA.toLocaleString()} ${unit}`;
+            if (totalValueBElement) totalValueBElement.textContent = `總容量: ${valueB.toLocaleString()} ${unit}`;
+
+
+            // 2. 計算單位價格 (Value per dollar)
+            const vpA = valueA / priceA;
+            const vpB = valueB / priceB;
+
+            // 格式化顯示的數值
+            const formattedVpA = vpA.toFixed(3);
+            const formattedVpB = vpB.toFixed(3);
+
+            valueElementA.textContent = `${formattedVpA} ${unit}/元`;
+            valueElementB.textContent = `${formattedVpB} ${unit}/元`;
+
+            // 3. 比較並生成結果
+            let betterProduct = '';
+            let percentageDifference = 0;
+            let resultColor = 'text-gray-700';
+
+            if (vpA > vpB) {
+                betterProduct = 'A 產品';
+                // (vpA - vpB) / vpB * 100%
+                percentageDifference = ((vpA - vpB) / vpB * 100).toFixed(1);
+                resultColor = 'text-highlight';
+            } else if (vpB > vpA) {
+                betterProduct = 'B 產品';
+                // (vpB - vpA) / vpA * 100%
+                percentageDifference = ((vpB - vpA) / vpA * 100).toFixed(1);
+                resultColor = 'text-highlight';
+            } else {
+                betterProduct = '兩者相同';
+                percentageDifference = 0;
+                resultColor = 'text-blue-500';
+            }
+            
+            // 4. 更新結果區塊
+            let resultHTML;
+            if (percentageDifference > 0) {
+                resultHTML = `
+                    <div class="text-center">
+                        <span class="text-2xl font-bold ${resultColor}">${betterProduct}</span>
+                        <div class="text-lg mt-1 text-gray-700">
+                            每元可獲得的數量高出 <span class="text-3xl font-extrabold ${resultColor}">${percentageDifference}%</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultHTML = `
+                    <div class="text-center">
+                        <span class="text-2xl font-bold text-blue-500">性價比完全相同！</span>
+                        <div class="text-lg mt-1 text-gray-700">可以隨意選購。</div>
+                    </div>
+                `;
+            }
+
+            resultElement.innerHTML = resultHTML;
+
+            // 5. 高亮顯示更好的產品
+            const boxA = document.getElementById(`${idPrefix}BoxA`);
+            const boxB = document.getElementById(`${idPrefix}BoxB`);
+
+            boxA.classList.remove('better-a');
+            boxB.classList.remove('better-b');
+
+            if (vpA > vpB) {
+                boxA.classList.add('better-a');
+            } else if (vpB > vpA) {
+                boxB.classList.add('better-b');
+            }
+        }
+
+        /**
+         * 為所有輸入欄位綁定事件，實現即時比較
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const converters = [
+                { prefix: 'drink', unit: '毫升' },
+                { prefix: 'weight', unit: '克' },
+                { prefix: 'unit', unit: '單位' }
+            ];
+
+            converters.forEach(({ prefix, unit }) => {
+                let inputs;
+                if (prefix === 'drink') {
+                    // 飲品區塊有三個輸入欄位
+                    inputs = [
+                        document.getElementById('drinkCountA'),
+                        document.getElementById('drinkVolumePerUnitA'),
+                        document.getElementById('drinkPriceA'),
+                        document.getElementById('drinkCountB'),
+                        document.getElementById('drinkVolumePerUnitB'),
+                        document.getElementById('drinkPriceB')
+                    ];
+                } else {
+                    // 重量和數量區塊只有兩個輸入欄位
+                    inputs = [
+                        document.getElementById(`${prefix}ValueA`),
+                        document.getElementById(`${prefix}PriceA`),
+                        document.getElementById(`${prefix}ValueB`),
+                        document.getElementById(`${prefix}PriceB`)
+                    ];
+                }
+                
+
+                const handler = () => compareProducts(prefix, unit);
+                inputs.forEach(input => {
+                    if (input) input.addEventListener('input', handler);
+                });
+
+                // 頁面加載時執行一次預設比較
+                handler();
+            });
+        });
+
+    </script>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto bg-white p-6 md:p-10 rounded-xl shadow-2xl">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-2 border-b pb-2">🛒 購物性價比兩兩比較器</h1>
+        <p class="text-gray-500 mb-8">請輸入 A 和 B 兩款商品的資訊，系統將會比較**每元可獲得的數量**，高值者更划算。</p>
+
+        <!-- 1. 飲品換算表 (已調整為多單位輸入) -->
+        <div class="mb-10 p-6 rounded-xl border-t-4 border-primary-blue bg-blue-50/70 shadow-lg">
+            <h2 class="text-2xl font-bold text-primary-blue mb-6">🥤 飲品容量換算 (毫升/元)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                
+                <!-- 產品 A 輸入區 -->
+                <div id="drinkBoxA" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-blue">A 產品</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">數量 (瓶/罐)</label>
+                        <input type="number" id="drinkCountA" value="6" placeholder="數量 (例如: 6)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">單瓶容量 (毫升, mL)</label>
+                        <input type="number" id="drinkVolumePerUnitA" value="330" placeholder="單瓶容量 (mL)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+
+                        <label class="block text-sm font-medium text-gray-700">總價格 (元)</label>
+                        <input type="number" id="drinkPriceA" value="129" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+                    </div>
+                    <div class="mt-4 border-t pt-3 flex flex-col items-center">
+                        <div id="drinkTotalValueA" class="text-base font-semibold text-gray-800">總容量: 1,980 毫升</div>
+                        <div class="text-sm text-gray-500 mt-1">性價比 (毫升/元)</div>
+                        <div id="drinkValuePerDollarA" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- 比較結果區 -->
+                <div id="drinkComparisonResult" class="comparison-result p-6 rounded-lg self-center flex flex-col justify-center h-full min-h-[150px]">
+                    <!-- 結果將由 JS 填入 -->
+                </div>
+
+                <!-- 產品 B 輸入區 -->
+                <div id="drinkBoxB" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-blue">B 產品</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">數量 (瓶/罐)</label>
+                        <input type="number" id="drinkCountB" value="4" placeholder="數量 (例如: 4)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">單瓶容量 (毫升, mL)</label>
+                        <input type="number" id="drinkVolumePerUnitB" value="500" placeholder="單瓶容量 (mL)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+
+                        <label class="block text-sm font-medium text-gray-700">總價格 (元)</label>
+                        <input type="number" id="drinkPriceB" value="100" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
+                               oninput="compareProducts('drink', '毫升')">
+                    </div>
+                    <div class="mt-4 border-t pt-3 flex flex-col items-center">
+                        <div id="drinkTotalValueB" class="text-base font-semibold text-gray-800">總容量: 2,000 毫升</div>
+                        <div class="text-sm text-gray-500 mt-1">性價比 (毫升/元)</div>
+                        <div id="drinkValuePerDollarB" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 物品重量換算表 (保持原樣) -->
+        <div class="mb-10 p-6 rounded-xl border-t-4 border-primary-green bg-green-50/70 shadow-lg">
+            <h2 class="text-2xl font-bold text-primary-green mb-6">⚖️ 物品重量換算 (克/元)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                
+                <!-- 產品 A 輸入區 -->
+                <div id="weightBoxA" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-green">A 產品</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">重量 (克, g)</label>
+                        <input type="number" id="weightValueA" value="500" placeholder="重量 (g)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-green focus:border-primary-green"
+                               oninput="compareProducts('weight', '克')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">價格 (元)</label>
+                        <input type="number" id="weightPriceA" value="120" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-green focus:border-primary-green"
+                               oninput="compareProducts('weight', '克')">
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="text-sm text-gray-500">性價比 (克/元)</div>
+                        <div id="weightValuePerDollarA" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- 比較結果區 -->
+                <div id="weightComparisonResult" class="comparison-result p-6 rounded-lg self-center flex flex-col justify-center h-full min-h-[150px]">
+                    <!-- 結果將由 JS 填入 -->
+                </div>
+
+                <!-- 產品 B 輸入區 -->
+                <div id="weightBoxB" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-green">B 產品</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">重量 (克, g)</label>
+                        <input type="number" id="weightValueB" value="650" placeholder="重量 (g)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-green focus:border-primary-green"
+                               oninput="compareProducts('weight', '克')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">價格 (元)</label>
+                        <input type="number" id="weightPriceB" value="150" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-green focus:border-primary-green"
+                               oninput="compareProducts('weight', '克')">
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="text-sm text-gray-500">性價比 (克/元)</div>
+                        <div id="weightValuePerDollarB" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 物品單價換算表 (保持原樣) -->
+        <div class="p-6 rounded-xl border-t-4 border-primary-purple bg-purple-50/70 shadow-lg">
+            <h2 class="text-2xl font-bold text-primary-purple mb-6">📦 物品數量換算 (數量/元)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                
+                <!-- 產品 A 輸入區 -->
+                <div id="unitBoxA" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-purple">A 產品 (單入包裝)</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">數量 (個/入)</label>
+                        <input type="number" id="unitValueA" value="12" placeholder="數量 (個/入)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-purple focus:border-primary-purple"
+                               oninput="compareProducts('unit', '單位')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">價格 (元)</label>
+                        <input type="number" id="unitPriceA" value="89" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-purple focus:border-primary-purple"
+                               oninput="compareProducts('unit', '單位')">
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="text-sm text-gray-500">性價比 (數量/元)</div>
+                        <div id="unitValuePerDollarA" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- 比較結果區 -->
+                <div id="unitComparisonResult" class="comparison-result p-6 rounded-lg self-center flex flex-col justify-center h-full min-h-[150px]">
+                    <!-- 結果將由 JS 填入 -->
+                </div>
+
+                <!-- 產品 B 輸入區 -->
+                <div id="unitBoxB" class="input-box p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-primary-purple">B 產品 (雙入包裝)</h3>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">數量 (個/入)</label>
+                        <input type="number" id="unitValueB" value="20" placeholder="數量 (個/入)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-purple focus:border-primary-purple"
+                               oninput="compareProducts('unit', '單位')">
+                        
+                        <label class="block text-sm font-medium text-gray-700">價格 (元)</label>
+                        <input type="number" id="unitPriceB" value="130" step="0.01" placeholder="價格 (元)"
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-primary-purple focus:border-primary-purple"
+                               oninput="compareProducts('unit', '單位')">
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="text-sm text-gray-500">性價比 (數量/元)</div>
+                        <div id="unitValuePerDollarB" class="text-xl font-bold text-gray-700 mt-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
