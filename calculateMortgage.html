@@ -3,358 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>房貸還款方式比較計算器</title>
+    <title>房貸還款計畫計算器 - 專業準確版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 設置全局字體為 Inter，確保良好的顯示效果 */
-        body { font-family: 'Inter', sans-serif; background-color: #f7f7f9; }
-        /* 確保表格在小螢幕上可以滾動 */
-        .table-container { overflow-x: auto; }
-        .sticky-header th { position: sticky; top: 0; background-color: #4f46e5; z-index: 10; }
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --rose: #fb7185;
+            --emerald: #10b981;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f0f4ff;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .number-font {
+            font-family: 'Montserrat', sans-serif;
+            word-break: break-all;
+            line-height: 1.2;
+        }
+
+        .jelly-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(100px, 50px) scale(1.2); }
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            background: white;
+            border-color: var(--primary);
+            outline: none;
+        }
+
         input[type="radio"]:checked + label {
-            background-color: #4f46e5;
+            background: var(--primary);
             color: white;
-            border-color: #4f46e5;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
         }
-        .interest-saving {
-            transition: all 0.3s ease-in-out;
-            animation: pulse-saving 1.5s infinite;
+
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
         }
+
+        .table-container::-webkit-scrollbar { width: 6px; }
+        .table-container::-webkit-scrollbar-thumb { background-color: var(--primary); border-radius: 10px; }
+
+        .interest-saving-box {
+            animation: pulse-saving 2s infinite ease-in-out;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
         @keyframes pulse-saving {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .btn-jelly {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-jelly:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
         }
     </style>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#4f46e5',
-                        'secondary': '#6366f1',
-                    }
-                }
-            }
-        }
-
         /**
-         * 執行房貸計算的統一函數
-         * @param {number} loanAmount 貸款金額 (元)
-         * @param {number} annualRate 年利率 (例如 0.025)
-         * @param {number} graceMonths 寬限期 (月數)
-         * @param {number} loanYears 貸款年限 (年)
-         * @param {string} method 還款方式 ('EMI' - 本息均攤, 'CPM' - 本金均攤)
-         * @returns {Object} 包含每月還款詳情的陣列及總利息
+         * 核心計算邏輯
          */
         function calculateMortgage(loanAmount, annualRate, graceMonths, loanYears, method) {
             const totalMonths = loanYears * 12;
             const monthlyRate = annualRate / 12;
+            const amortizationMonths = totalMonths - graceMonths;
+            
             let remainingPrincipal = loanAmount;
             const results = [];
-            const amortizationMonths = totalMonths - graceMonths;
             let totalInterest = 0;
 
-            if (amortizationMonths <= 0 || monthlyRate < 0) {
-                return { results: [], totalInterest: 0 };
-            }
+            if (amortizationMonths <= 0) return { results: [], totalInterest: 0 };
 
+            // 若為 EMI (本息平均攤還)，先計算固定月付額
             let emi = 0;
             if (method === 'EMI') {
                 if (monthlyRate > 0) {
-                    const powerFactor = Math.pow(1 + monthlyRate, amortizationMonths);
-                    emi = remainingPrincipal * monthlyRate * powerFactor / (powerFactor - 1);
+                    emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, amortizationMonths)) / (Math.pow(1 + monthlyRate, amortizationMonths) - 1);
                 } else {
-                    emi = remainingPrincipal / amortizationMonths;
+                    emi = loanAmount / amortizationMonths;
                 }
             }
 
-            const cpmFixedPrincipal = loanAmount / amortizationMonths;
+            // 本金平均攤還的每月應還本金
+            const cpmPrincipalPerMonth = loanAmount / amortizationMonths;
 
             for (let month = 1; month <= totalMonths; month++) {
-                let currentPayment = 0;
-                let interestPayment = 0;
+                let interestPayment = remainingPrincipal * monthlyRate;
                 let principalPayment = 0;
-                
-                interestPayment = remainingPrincipal * monthlyRate;
-                totalInterest += interestPayment;
+                let monthlyPayment = 0;
 
                 if (month <= graceMonths) {
-                    // 寬限期: 只還利息
-                    currentPayment = interestPayment;
+                    // 寬限期內只付利息
                     principalPayment = 0;
-                    
+                    monthlyPayment = interestPayment;
                 } else {
-                    // 攤還期 (Amortization Period)
-                    
                     if (method === 'EMI') {
-                        // 本息平均攤還 (EMI)
-                        currentPayment = emi;
-                        principalPayment = currentPayment - interestPayment;
-
-                    } else if (method === 'CPM') {
-                        // 本金平均攤還 (CPM)
-                        principalPayment = cpmFixedPrincipal;
-                        
-                        if (month === totalMonths) {
-                            principalPayment = remainingPrincipal; 
-                        }
-                        
-                        currentPayment = interestPayment + principalPayment;
+                        // 本息平均攤還
+                        monthlyPayment = emi;
+                        principalPayment = monthlyPayment - interestPayment;
+                    } else {
+                        // 本金平均攤還
+                        principalPayment = cpmPrincipalPerMonth;
+                        monthlyPayment = principalPayment + interestPayment;
                     }
 
-                    // 更新剩餘本金
-                    remainingPrincipal = remainingPrincipal - principalPayment;
-
-                    // 避免浮點數誤差
-                    if (remainingPrincipal < 0) {
-                        principalPayment += remainingPrincipal; // 修正本金支付
-                        remainingPrincipal = 0;
+                    // 處理最後一期的尾差
+                    if (month === totalMonths) {
+                        principalPayment = remainingPrincipal;
+                        monthlyPayment = principalPayment + interestPayment;
                     }
+                    
+                    remainingPrincipal -= principalPayment;
                 }
+
+                totalInterest += interestPayment;
                 
                 results.push({
-                    month: month,
-                    monthlyPayment: Math.round(currentPayment),
+                    month,
+                    monthlyPayment: Math.round(monthlyPayment),
                     interestPayment: Math.round(interestPayment),
                     principalPayment: Math.round(principalPayment),
-                    remainingPrincipal: Math.max(0, Math.round(remainingPrincipal)) 
+                    remainingPrincipal: Math.max(0, Math.round(remainingPrincipal))
                 });
             }
 
             return { results, totalInterest: Math.round(totalInterest) };
         }
 
-        /**
-         * 處理表單提交並顯示結果
-         */
         function handleCalculation() {
-            // 1. 獲取輸入值
-            const loanAmountInTenThousands = parseFloat(document.getElementById('loanAmount').value);
-            const loanAmount = loanAmountInTenThousands * 10000;
-            const annualRate = parseFloat(document.getElementById('annualRate').value) / 100;
-            const graceMonths = parseInt(document.getElementById('graceMonths').value);
-            const loanYears = parseInt(document.getElementById('loanYears').value);
+            const loanAmountInput = parseFloat(document.getElementById('loanAmount').value) || 0;
+            const loanAmount = loanAmountInput * 10000; // 萬轉元
+            const annualRate = (parseFloat(document.getElementById('annualRate').value) || 0) / 100;
+            const graceMonths = parseInt(document.getElementById('graceMonths').value) || 0;
+            const loanYears = parseInt(document.getElementById('loanYears').value) || 0;
             const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-            const resultContainer = document.getElementById('resultsContainer');
             const summaryContainer = document.getElementById('summaryContainer');
-            
-            // 2. 簡易輸入驗證
-            if (isNaN(loanAmountInTenThousands) || isNaN(annualRate) || isNaN(graceMonths) || isNaN(loanYears) || loanAmountInTenThousands <= 0 || loanYears <= 0) {
-                resultContainer.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-lg">請輸入有效的貸款資訊。</div>`;
-                summaryContainer.innerHTML = '';
+            const resultContainer = document.getElementById('resultsContainer');
+
+            if (loanAmount <= 0 || loanYears <= 0) {
+                summaryContainer.innerHTML = `<div class="p-6 glass-container text-rose-500 rounded-3xl font-bold text-center">⚠️ 請輸入有效的貸款資訊。</div>`;
+                resultContainer.innerHTML = '';
                 return;
             }
 
-            // 3. 同時計算兩種方法的結果
-            const resultEMI = calculateMortgage(loanAmount, annualRate, graceMonths, loanYears, 'EMI');
-            const resultCPM = calculateMortgage(loanAmount, annualRate, graceMonths, loanYears, 'CPM');
+            const resEMI = calculateMortgage(loanAmount, annualRate, graceMonths, loanYears, 'EMI');
+            const resCPM = calculateMortgage(loanAmount, annualRate, graceMonths, loanYears, 'CPM');
             
-            // 處理無法計算的情況
-            if (resultEMI.results.length === 0 || resultCPM.results.length === 0) {
-                resultContainer.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-700 rounded-lg">無法計算。請確認貸款年限大於寬限期。</div>`;
-                summaryContainer.innerHTML = '';
-                return;
-            }
-
-            // 4. 根據選擇的方法提取顯示數據
-            const currentResult = selectedMethod === 'EMI' ? resultEMI : resultCPM;
-            const otherResult = selectedMethod === 'EMI' ? resultCPM : resultEMI;
-            const otherMethodName = selectedMethod === 'EMI' ? '本金平均攤還法' : '本息平均攤還法';
-            const currentMethodName = selectedMethod === 'EMI' ? '本息平均攤還法' : '本金平均攤還法';
+            const current = selectedMethod === 'EMI' ? resEMI : resCPM;
+            const other = selectedMethod === 'EMI' ? resCPM : resEMI;
             
-            const results = currentResult.results;
-            const totalInterest = currentResult.totalInterest;
-            const totalPayment = results.reduce((sum, item) => sum + item.monthlyPayment, 0);
-            
-            // 計算利息差額
-            const interestDifference = otherResult.totalInterest - totalInterest; // 正數表示當前方法較省利息
+            // 比較利息差
+            const interestDiff = other.totalInterest - current.totalInterest;
+            const totalPayment = current.results.reduce((s, i) => s + i.monthlyPayment, 0);
 
-            // 5. 彙總統計
-            
-            let firstAmortizationPayment = results.find(r => r.month === graceMonths + 1);
-            const gracePeriodMonthlyPayment = graceMonths > 0 ? results[0].monthlyPayment : 0;
-            const amortizationStartPayment = firstAmortizationPayment ? firstAmortizationPayment.monthlyPayment : results[0].monthlyPayment;
-            
-            // 攤還期最後一期月付金 (主要用於 CPM 顯示範圍)
-            const amortizationEndPayment = results.length > graceMonths + 1 ? results[results.length - 1].monthlyPayment : amortizationStartPayment;
-
-            let amortizationPaymentDisplay = '';
-            if (selectedMethod === 'EMI') {
-                amortizationPaymentDisplay = `${amortizationStartPayment.toLocaleString()}`;
-            } else {
-                amortizationPaymentDisplay = `${amortizationStartPayment.toLocaleString()} (首期) ~ ${amortizationEndPayment.toLocaleString()} (末期)`;
-            }
-
-            // 6. 產生彙總統計 HTML
-            let interestDifferenceHtml = '';
-            if (interestDifference > 0) {
-                // 當前方法利息較少
-                interestDifferenceHtml = `
-                    <div class="p-3 bg-green-100 rounded-lg shadow-sm border border-green-400 col-span-2 md:col-span-1 interest-saving">
-                        <div class="text-xs text-green-700">與 ${otherMethodName} 相比，節省利息</div>
-                        <div class="text-xl font-bold text-green-800">${interestDifference.toLocaleString()}</div>
-                    </div>
-                `;
-            } else if (interestDifference < 0) {
-                // 當前方法利息較多
-                 interestDifferenceHtml = `
-                    <div class="p-3 bg-red-100 rounded-lg shadow-sm border border-red-400 col-span-2 md:col-span-1">
-                        <div class="text-xs text-red-700">比 ${otherMethodName} 多付利息</div>
-                        <div class="text-xl font-bold text-red-800">${(-interestDifference).toLocaleString()}</div>
-                    </div>
-                `;
-            } else {
-                // 利息相同 (通常只有零利率時發生)
-                interestDifferenceHtml = `
-                    <div class="p-3 bg-gray-100 rounded-lg shadow-sm border border-gray-400 col-span-2 md:col-span-1">
-                        <div class="text-xs text-gray-700">與 ${otherMethodName} 相比</div>
-                        <div class="text-xl font-bold text-gray-800">利息差額：0</div>
-                    </div>
-                `;
-            }
-
-
+            // 更新摘要 (優化大數字佈局)
             summaryContainer.innerHTML = `
-                <h3 class="text-xl font-bold text-primary mb-3">計算結果彙總 (${currentMethodName})</h3>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                    <!-- 總支付利息 -->
-                    <div class="p-3 bg-white rounded-lg shadow-sm border border-indigo-200">
-                        <div class="text-xs text-gray-500">總支付利息</div>
-                        <div class="text-xl font-semibold text-red-600">${totalInterest.toLocaleString()}</div>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-8 bg-indigo-500 rounded-full"></div>
+                        <h3 class="text-xl font-black text-slate-800">試算彙總</h3>
                     </div>
-                    <!-- 總還款金額 -->
-                    <div class="p-3 bg-white rounded-lg shadow-sm border border-indigo-200">
-                        <div class="text-xs text-gray-500">總還款金額</div>
-                        <div class="text-xl font-semibold text-green-600">${totalPayment.toLocaleString()}</div>
+                    <span class="px-4 py-1 bg-indigo-100 text-indigo-600 rounded-full text-xs font-bold">
+                        ${selectedMethod === 'EMI' ? '本息平均攤還' : '本金平均攤還'}
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-4 glass-container rounded-[1.5rem] flex flex-col justify-center min-w-0">
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">總利息支出</div>
+                        <div class="text-xl md:text-2xl number-font font-black text-rose-500 truncate">$${current.totalInterest.toLocaleString()}</div>
                     </div>
-                    
-                    <!-- 利息差額比較 (新增欄位) -->
-                    ${interestDifferenceHtml}
-
-                    <!-- 攤還期月付金範圍 -->
-                    <div class="p-3 bg-white rounded-lg shadow-sm border border-indigo-200 col-span-2">
-                        <div class="text-xs text-gray-500">攤還期月付金範圍</div>
-                        <div class="text-lg font-semibold text-gray-800">${amortizationPaymentDisplay}</div>
-                        <div class="text-xs text-gray-400">(${results.length - graceMonths}個月)</div>
+                    <div class="p-4 glass-container rounded-[1.5rem] flex flex-col justify-center min-w-0">
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">總還款金額</div>
+                        <div class="text-xl md:text-2xl number-font font-black text-slate-800 truncate">$${totalPayment.toLocaleString()}</div>
                     </div>
-
-                    ${graceMonths > 0 ? `
-                        <div class="p-3 bg-white rounded-lg shadow-sm border border-indigo-200 col-span-2 md:col-span-1">
-                            <div class="text-xs text-gray-500">寬限期月付金</div>
-                            <div class="text-xl font-semibold text-gray-800">${gracePeriodMonthlyPayment.toLocaleString()}</div>
-                            <div class="text-xs text-gray-400">(${graceMonths}個月, 僅繳利息)</div>
-                        </div>` : ''}
+                    <div class="p-4 glass-container rounded-[1.5rem] flex flex-col justify-center min-w-0">
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">首期還款</div>
+                        <div class="text-xl md:text-2xl number-font font-black text-indigo-500 truncate">$${current.results[0].monthlyPayment.toLocaleString()}</div>
+                    </div>
+                    <div class="p-4 ${interestDiff > 0 ? 'interest-saving-box' : 'glass-container'} rounded-[1.5rem] flex flex-col justify-center min-w-0">
+                        <div class="text-[10px] font-black ${interestDiff > 0 ? 'text-emerald-600' : 'text-slate-400'} uppercase tracking-widest mb-1 truncate">
+                            ${interestDiff > 0 ? '省下利息' : '末期還款'}
+                        </div>
+                        <div class="text-xl md:text-2xl number-font font-black ${interestDiff > 0 ? 'text-emerald-600' : 'text-slate-800'} truncate">
+                            ${interestDiff > 0 ? '+$' + interestDiff.toLocaleString() : '$' + current.results[current.results.length-1].monthlyPayment.toLocaleString()}
+                        </div>
+                    </div>
                 </div>
             `;
 
-            // 7. 產生每月詳細列表
-            let tableRows = results.map(item => {
-                const isGrace = item.month <= graceMonths;
-                const rowClass = isGrace ? 'bg-indigo-50 hover:bg-indigo-100 font-medium' : 'hover:bg-gray-50';
-                const paymentColor = isGrace ? 'text-primary' : (item.month === graceMonths + 1 ? 'font-bold text-blue-700' : 'text-gray-900');
-
-                return `
-                    <tr class="${rowClass} border-b">
-                        <td class="p-3 whitespace-nowrap text-sm text-center">${item.month}</td>
-                        <td class="p-3 whitespace-nowrap text-sm text-center ${paymentColor}">${item.monthlyPayment.toLocaleString()}</td>
-                        <td class="p-3 whitespace-nowrap text-sm text-center text-red-600">${item.interestPayment.toLocaleString()}</td>
-                        <td class="p-3 whitespace-nowrap text-sm text-center text-green-600">${item.principalPayment.toLocaleString()}</td>
-                        <td class="p-3 whitespace-nowrap text-sm text-center text-gray-600">${item.remainingPrincipal.toLocaleString()}</td>
-                    </tr>
-                `;
-            }).join('');
+            // 更新表格
+            const tableRows = current.results.map(item => `
+                <tr class="${item.month <= graceMonths ? 'bg-indigo-50/40' : ''} border-b border-indigo-50/30 transition-colors hover:bg-white/40">
+                    <td class="p-3 number-font font-bold text-center text-slate-400 text-[10px]">${item.month}</td>
+                    <td class="p-3 number-font font-black text-center text-slate-700 text-sm md:text-base">$${item.monthlyPayment.toLocaleString()}</td>
+                    <td class="p-3 number-font font-bold text-center text-rose-400 text-sm">$${item.interestPayment.toLocaleString()}</td>
+                    <td class="p-3 number-font font-bold text-center text-emerald-500 text-sm">$${item.principalPayment.toLocaleString()}</td>
+                    <td class="p-3 number-font font-medium text-center text-slate-400 text-xs">$${item.remainingPrincipal.toLocaleString()}</td>
+                </tr>
+            `).join('');
 
             resultContainer.innerHTML = `
-                <h3 class="text-xl font-bold text-primary mt-8 mb-3">每月還款詳細變化 (單位: 元)</h3>
-                <div class="text-sm text-gray-600 mb-4">* 標註顏色的月份為寬限期 (僅還利息)。</div>
-                <div class="table-container max-h-96 overflow-y-scroll rounded-lg shadow-lg border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-primary text-white sticky-header">
-                            <tr>
-                                <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider rounded-tl-lg">期數 (月)</th>
-                                <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider">每月還款額</th>
-                                <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider">支付利息</th>
-                                <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider">償還本金</th>
-                                <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider rounded-tr-lg">剩餘本金</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            ${tableRows}
-                        </tbody>
-                    </table>
+                <div class="mt-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-2 h-6 bg-amber-400 rounded-full"></div>
+                        <h3 class="text-lg font-black text-slate-800">每月還款清單</h3>
+                    </div>
+                    <div class="table-container glass-container rounded-[2rem] p-2 md:p-4 overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr class="text-[10px] font-black text-indigo-400 uppercase tracking-widest border-b border-indigo-100/50">
+                                    <th class="p-3 text-center">期別</th>
+                                    <th class="p-3 text-center">月付金</th>
+                                    <th class="p-3 text-center">利息額</th>
+                                    <th class="p-3 text-center">本金額</th>
+                                    <th class="p-3 text-center">剩餘本金</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
                 </div>
             `;
         }
 
-        // 頁面加載完成後執行一次計算 (使用預設值)
         window.onload = handleCalculation;
-
     </script>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto bg-white p-6 md:p-10 rounded-xl shadow-2xl">
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-8 border-b pb-2">房貸還款計畫計算與比較</h1>
+<body class="flex flex-col items-center py-8 px-4 md:px-8">
 
-        <!-- 還款方式選擇 -->
-        <div class="mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">請選擇還款方式</h2>
-            <div class="flex flex-col sm:flex-row gap-4">
-                
-                <input type="radio" id="methodEmi" name="paymentMethod" value="EMI" checked class="hidden" onchange="handleCalculation()">
-                <label for="methodEmi" class="flex-1 text-center cursor-pointer p-3 border-2 border-primary rounded-lg font-medium text-primary transition duration-200 hover:bg-indigo-50">
-                    本息平均攤還法 (月付金固定)
-                </label>
+    <!-- 背景裝飾 -->
+    <div class="jelly-blob w-72 h-72 bg-indigo-200 top-[-5%] left-[-5%] opacity-60"></div>
+    <div class="jelly-blob w-64 h-64 bg-rose-100 bottom-[-5%] right-[-5%] opacity-50" style="animation-delay: -5s;"></div>
 
-                <input type="radio" id="methodCpm" name="paymentMethod" value="CPM" class="hidden" onchange="handleCalculation()">
-                <label for="methodCpm" class="flex-1 text-center cursor-pointer p-3 border-2 border-primary rounded-lg font-medium text-primary transition duration-200 hover:bg-indigo-50">
-                    本金平均攤還法 (月付金遞減，總利息較少)
-                </label>
-            </div>
+    <div class="max-w-6xl w-full relative z-10">
+        <!-- 導航 -->
+        <a href="index.html" class="inline-flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest mb-6 hover:translate-x-[-4px] transition-transform">
+            ← 返回首頁
+        </a>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-[900] text-slate-800 mb-1 tracking-tight">房貸計畫計算器</h1>
+            <p class="text-slate-400 text-xs font-bold tracking-widest uppercase">Smart Mortgage Analytics</p>
         </div>
-        
-        <!-- 貸款參數輸入 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 p-6 border rounded-xl bg-gray-50">
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
             
-            <!-- 貸款金額 - 單位: 萬 -->
-            <div class="flex flex-col">
-                <label for="loanAmount" class="text-sm font-medium text-gray-700 mb-1">貸款金額 (萬)</label>
-                <input type="number" id="loanAmount" value="700" class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" placeholder="例如: 800 (代表 800 萬)">
+            <!-- 左側輸入面板 -->
+            <div class="xl:col-span-4 glass-container rounded-[2rem] p-6 h-fit">
+                <h2 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> 貸款參數設定
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-black text-slate-400 mb-1 ml-1 uppercase">貸款總額 (萬)</label>
+                            <input type="number" id="loanAmount" value="1000" class="glass-input w-full p-3 rounded-xl number-font font-bold text-slate-700 text-lg">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-1 ml-1 uppercase">年利率 (%)</label>
+                            <input type="number" id="annualRate" value="2.18" step="0.01" class="glass-input w-full p-3 rounded-xl number-font font-bold text-slate-700 text-lg">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-1 ml-1 uppercase">貸款年限 (年)</label>
+                            <input type="number" id="loanYears" value="30" class="glass-input w-full p-3 rounded-xl number-font font-bold text-slate-700 text-lg">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 ml-1 uppercase">寬限期 (月)</label>
+                        <input type="number" id="graceMonths" value="0" class="glass-input w-full p-3 rounded-xl number-font font-bold text-slate-700 text-lg">
+                    </div>
+
+                    <div class="pt-4 space-y-2">
+                        <input type="radio" id="methodEmi" name="paymentMethod" value="EMI" checked class="hidden" onchange="handleCalculation()">
+                        <label for="methodEmi" class="block cursor-pointer p-3 glass-container rounded-xl text-xs font-bold text-slate-600 text-center transition-all">
+                            本息平均攤還 (每月還款固定)
+                        </label>
+
+                        <input type="radio" id="methodCpm" name="paymentMethod" value="CPM" class="hidden" onchange="handleCalculation()">
+                        <label for="methodCpm" class="block cursor-pointer p-3 glass-container rounded-xl text-xs font-bold text-slate-600 text-center transition-all">
+                            本金平均攤還 (利息遞減)
+                        </label>
+                    </div>
+
+                    <button onclick="handleCalculation()" class="w-full py-4 btn-jelly text-white font-black rounded-xl shadow-lg mt-2 uppercase tracking-widest text-xs">
+                        重新試算
+                    </button>
+                </div>
             </div>
 
-            <!-- 利率 -->
-            <div class="flex flex-col">
-                <label for="annualRate" class="text-sm font-medium text-gray-700 mb-1">年利率 (%)</label>
-                <input type="number" id="annualRate" value="2.7" step="0.01" class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" placeholder="例如: 2.1">
-            </div>
+            <!-- 右側結果展示區 -->
+            <div class="xl:col-span-8 flex flex-col gap-6">
+                <!-- 彙總卡片 -->
+                <div id="summaryContainer" class="p-6 md:p-8 glass-container rounded-[2rem]">
+                    <!-- JS 動態注入 -->
+                </div>
+                
+                <!-- 提示資訊 -->
+                <div class="p-5 glass-container rounded-[2rem] bg-indigo-500/5 border-indigo-100 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                        <span class="text-amber-600 text-lg">💡</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                        <strong class="text-slate-700">計算提示：</strong> 本工具採「月」為單位進行複利計算。本金與利息經四捨五入處理，最後一期會自動補足尾差，確保剩餘本金精確歸零。
+                    </p>
+                </div>
 
-            <!-- 寬限期 -->
-            <div class="flex flex-col">
-                <label for="graceMonths" class="text-sm font-medium text-gray-700 mb-1">寬限期 (月數, 填 0 即無)</label>
-                <input type="number" id="graceMonths" value="0" class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" placeholder="例如: 12">
-            </div>
-
-            <!-- 貸款年限 -->
-            <div class="flex flex-col">
-                <label for="loanYears" class="text-sm font-medium text-gray-700 mb-1">貸款年限 (年)</label>
-                <input type="number" id="loanYears" value="30" class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" placeholder="例如: 30">
+                <!-- 清單表格 -->
+                <div id="resultsContainer">
+                    <!-- JS 動態注入 -->
+                </div>
             </div>
         </div>
 
-        <button onclick="handleCalculation()" class="w-full p-3 bg-primary text-white font-bold rounded-lg shadow-xl hover:bg-secondary transition duration-300 ease-in-out transform hover:scale-[1.005]">
-            重新計算還款計畫
-        </button>
-
-        <!-- 彙總結果顯示區 -->
-        <div id="summaryContainer" class="mt-10 p-6 bg-indigo-50 rounded-xl shadow-inner border border-indigo-200">
-            <!-- 彙總數據將在這裡生成 -->
-        </div>
-
-        <!-- 每月詳細列表顯示區 -->
-        <div id="resultsContainer" class="mt-8">
-            <!-- 詳細表格將在這裡生成 -->
+        <div class="py-12 text-center opacity-20">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">FinTech Precise Logic • 2024 Edition</p>
         </div>
     </div>
+
 </body>
 </html>

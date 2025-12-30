@@ -3,69 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人理財與購物工具集</title>
+    <title>全能生活計算工具箱</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --rose: #fb7185;
+            --amber: #fbbf24;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f0f4ff;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow-x: hidden;
         }
-        .tool-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+        /* 動態果凍背景 */
+        .jelly-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 20s infinite alternate ease-in-out;
         }
-        .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(100px, 50px) scale(1.2); }
+        }
+
+        /* 毛玻璃卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        /* 立體 Ring 光環 */
+        .tool-card:hover .ring-effect {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .ring-effect {
+            position: absolute;
+            inset: -8px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(251, 113, 133, 0.2));
+            border-radius: 2.5rem;
+            z-index: -1;
+            opacity: 0;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .number-font {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* 標章樣式 */
+        .badge-amber {
+            background: linear-gradient(45deg, #fbbf24, #f59e0b);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .tool-card:active {
+            transform: scale(0.95);
         }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'finance': '#0694a5',
-                        'shopping': '#a55eea',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="p-4">
-    <div class="max-w-4xl w-full mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4">實用生活小幫手</h1>
-        <p class="text-xl text-gray-500 mb-12">選擇您想使用的計算或比較工具</p>
+<body class="flex items-center justify-center p-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- 背景元素 -->
+    <div class="jelly-blob w-96 h-96 bg-indigo-200 top-[-10%] left-[-10%] opacity-60"></div>
+    <div class="jelly-blob w-80 h-80 bg-rose-200 bottom-[-5%] right-[-5%] opacity-50" style="animation-delay: -5s;"></div>
+    <div class="jelly-blob w-64 h-64 bg-amber-100 top-[30%] left-[40%] opacity-40" style="animation-delay: -10s;"></div>
+
+    <div class="max-w-4xl w-full mx-auto relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <div class="inline-block bg-white/50 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] text-indigo-500 uppercase mb-4 border border-white/80">
+                Premium Utility Toolbox
+            </div>
+            <h1 class="text-4xl md:text-6xl font-[900] text-indigo-950 mb-4 tracking-tight">
+                全能生活小幫手
+            </h1>
+            <p class="text-slate-400 font-medium text-lg">選擇您的計算工具，讓生活更有條理</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
             
             <!-- 房貸計算器卡片 -->
-            <a href="calculateMortgage.html" class="tool-card block p-8 rounded-2xl bg-white border-b-4 border-finance hover:border-b-8">
-                <div class="flex flex-col items-center">
-                    <svg class="w-16 h-16 text-finance mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                    </svg>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">房貸還款計算</h2>
-                    <p class="text-gray-500">計算貸款期限、每月還款金額及總利息支出。</p>
+            <a href="calculateMortgage.html" class="tool-card group relative block">
+                <div class="ring-effect"></div>
+                <div class="glass-card rounded-[2.5rem] p-10 h-full flex flex-col items-center text-center">
+                    <div class="bg-indigo-500 p-4 rounded-3xl shadow-xl shadow-indigo-200 mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                    </div>
+                    <span class="number-font text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Finance Calculator</span>
+                    <h2 class="text-2xl font-black text-slate-800 mb-3">房貸還款計算</h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6 font-medium">精確掌握每月還款金額與利息，為您的成家夢想做最穩健的規劃。</p>
+                    
+                    <div class="mt-auto bg-indigo-50 text-indigo-600 font-black text-[11px] px-5 py-2 rounded-full flex items-center gap-2">
+                        開始試算 <span class="text-lg">→</span>
+                    </div>
                 </div>
             </a>
 
-            <!-- 購物換算卡片 -->
-            <a href="shoppingCalculator.html" class="tool-card block p-8 rounded-2xl bg-white border-b-4 border-shopping hover:border-b-8">
-                <div class="flex flex-col items-center">
-                    <svg class="w-16 h-16 text-shopping mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">購物性價比換算</h2>
-                    <p class="text-gray-500">比較不同容量或包裝商品的單位價格，找到最划算選項。</p>
+            <!-- 購物換算卡片 (最佳選擇勳章版) -->
+            <a href="shoppingCalculator.html" class="tool-card group relative block">
+                <div class="ring-effect"></div>
+                <!-- 琥珀色勳章 -->
+                <div class="absolute -top-4 -right-2 z-20 badge-amber px-4 py-1.5 rounded-full text-[10px] font-black flex items-center gap-1.5 border-2 border-white rotate-6 group-hover:rotate-12 transition-transform">
+                    🏆 最佳實用
+                </div>
+                
+                <div class="glass-card rounded-[2.5rem] p-10 h-full flex flex-col items-center text-center">
+                    <div class="bg-rose-500 p-4 rounded-3xl shadow-xl shadow-rose-200 mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                    </div>
+                    <span class="number-font text-[10px] font-black text-rose-400 uppercase tracking-widest mb-2">Shopping Helper</span>
+                    <h2 class="text-2xl font-black text-slate-800 mb-3">購物性價比換算</h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6 font-medium">利用大數據思維比較單位價格，找出隱藏在廣告背後的真正優惠。</p>
+                    
+                    <div class="mt-auto bg-rose-50 text-rose-500 font-black text-[11px] px-5 py-2 rounded-full flex items-center gap-2">
+                        立即比價 <span class="text-lg">→</span>
+                    </div>
                 </div>
             </a>
         </div>
         
+        <!-- Footer -->
+        <div class="mt-20 text-center">
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Design with Jelly & Glass Style</p>
+        </div>
     </div>
+
+    <script>
+        // 簡單的互動腳本，點擊卡片時會有縮放效果
+        document.querySelectorAll('.tool-card').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.96)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = '';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
 </body>
 </html>
