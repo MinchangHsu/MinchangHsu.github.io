@@ -43,11 +43,10 @@ button:active{transform:scale(.96);filter:brightness(1.05)}
 .warn{color:#e11d48;font-weight:700}
 .status{font-size:13px;min-height:20px;color:#059669;font-weight:700}
 textarea{min-height:110px;font-size:12px;font-weight:400}
-#backupBox{display:none}
 [hidden]{display:none!important}
-@media(max-width:400px){.grid{grid-template-columns:1fr}.big{font-size:28px}}</style></head><body><main><header><a href="index.html" class="back">‹ 返回首頁</a><div class="badge">Hokkaido Tax Refund</div><h1>北海道退稅試算器</h1><p class="sub" style="margin-top:8px">即時試算 · 歷史紀錄可編輯 · 整趟累計 · 本機保存與 JSON 備份</p></header><nav class="tabs" role="tablist"><button type="button" role="tab" data-tabbtn="overview" class="active">📊 總覽</button><button type="button" role="tab" data-tabbtn="calc">🧮 試算</button><button type="button" role="tab" data-tabbtn="rates">📋 費率</button></nav><section class="panel" data-tab="overview"><h2>整趟購物累計</h2><div class="grid"><div class="total"><div class="muted">購物總額</div><div class="big" id="totalSpent">¥0</div></div><div class="total"><div class="muted">預估實拿退款</div><div class="big" id="totalNet">¥0</div></div></div><p class="notice warn" id="pendingWarn"></p><div class="row"><span>原始消費稅合計</span><span id="totalTax">¥0</span></div><div class="row"><span>店家費合計</span><span id="totalMerchant">¥0</span></div><div class="row"><span>現金領款費合計</span><span id="totalCash">¥0</span></div><div class="row"><span>取整調整合計</span><span id="totalRound">¥0</span></div><div class="row"><span>退稅後實際支出合計</span><span id="totalAfter">¥0</span></div><div class="row"><span>購物筆數</span><span id="count">0</span></div><div id="records"></div></section><section class="panel" data-tab="overview"><h2>資料保存狀態</h2><p id="storageStatus" class="notice">正在檢查瀏覽器儲存功能…</p><p id="backupReminder" class="notice"></p><p class="notice">瀏覽器儲存無法保證永久：清除網站資料、換手機／瀏覽器、iOS Safari 長期未使用（約 7 天）都可能清空。iPhone 請「加入主畫面」使用，並於每次購物後下載 JSON 備份。</p></section><section class="panel" data-tab="overview"><h2>備份與還原</h2><p class="sub">可下載 JSON、複製備份文字，或選擇 JSON 檔還原。換裝置或清除瀏覽器資料後，靠備份還原。</p><div class="btns"><button id="copy">複製備份</button><button id="download">下載 JSON</button><button id="show">顯示／隱藏備份文字</button></div><div id="backupBox"><div class="field"><label for="backupText">備份文字（也可貼上舊備份還原）</label><textarea id="backupText"></textarea></div><button id="restore">從文字還原紀錄</button><div class="field" style="margin-top:12px"><label for="importFile">或選擇 JSON 備份檔還原</label><input id="importFile" type="file" accept=".json,application/json"></div></div><p class="status" id="backupStatus" role="status"></p></section><section class="panel" data-tab="calc" hidden><h2>新增／修改購物</h2><div class="field"><label for="brand">品牌</label><select id="brand"></select></div><div class="grid"><div class="field"><label for="amount">含稅購物金額 ¥</label><input id="amount" type="number" min="0" step="1" value="11000" inputmode="decimal"></div><div class="field"><label for="tax">消費稅率</label><select id="tax"><option value="10">10%</option><option value="8">8%</option></select></div><div class="field"><label for="basis">店家費用計算基準</label><select id="basis"><option value="refund">原始消費稅額</option><option value="pretax">未稅購物金額</option><option value="gross">含稅購物金額</option><option value="fixed">固定金額 ¥／筆</option></select></div><div class="field"><label for="fee" id="feeLabel">店家／平台費率 %</label><input id="fee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="待確認（留空）"></div><div class="field"><label for="rateStatus">費率確認狀態</label><select id="rateStatus"><option value="confirmed">已確認（依收據／官方）</option><option value="reference">參考值（待官方核實）</option><option value="unknown">待確認</option></select></div><div class="field"><label for="cashFee">現金領款服務費 %</label><input id="cashFee" type="number" min="0" max="100" step="0.1" value="10"></div><div class="field"><label for="minutes">額外辦理時間（分鐘）</label><input id="minutes" type="number" min="0" step="1" value="10"></div></div><div class="field"><label><input type="checkbox" id="cash" checked> 計算 Cash Japan 現金領款費（資格待官方確認）</label></div><div class="field"><label><input type="checkbox" id="round"> 模擬現金向下調整至 ¥50 單位（規則待確認）</label></div><div class="total"><div class="muted" id="netLabel">本筆預估實拿</div><div class="big" id="net">¥0</div><div class="row"><span>原始消費稅</span><span id="taxValue">—</span></div><div class="row"><span>店家／平台費</span><span id="merchantValue">—</span></div><div class="row"><span>現金領款費</span><span id="cashValue">—</span></div><div class="row"><span>取整調整</span><span id="roundValue">—</span></div><div class="row"><span>每分鐘退款效益</span><span id="minuteValue">—</span></div></div><p class="notice" id="brandInfo"></p><p class="notice" id="uncertainty"></p><div class="btns"><button class="primary" id="add">加入購物清單</button><button id="cancel" style="display:none">取消修改</button></div><p class="status" id="status" role="status"></p></section><section class="panel" data-tab="rates" hidden><h2>各家費率與確認狀態</h2><p class="sub">以下皆為研究整理值，<b>尚無任何項目取得官方逐店核實</b>。退款平台未逐店核實，不列入。請依收據修正並將狀態改為「已確認」。</p><div id="feeDirectory"></div></section><p class="notice">本工具僅估算費率，不判定免稅資格、商品是否符合規定、平台合作、海關確認或實際退款。2026-11-01 新制的門檻、期限與流程請以國稅廳／海關公告為準。請勿輸入護照、信用卡等敏感資料。</p></main><script>
+@media(max-width:400px){.grid{grid-template-columns:1fr}.big{font-size:28px}}</style></head><body><main><header><a href="index.html" class="back">‹ 返回首頁</a><div class="badge">Hokkaido Tax Refund</div><h1>北海道退稅試算器</h1><p class="sub" style="margin-top:8px">即時試算 · 歷史紀錄可編輯 · 整趟累計 · 資料儲存於 Google Sheet</p></header><nav class="tabs" role="tablist"><button type="button" role="tab" data-tabbtn="overview" class="active">📊 總覽</button><button type="button" role="tab" data-tabbtn="calc">🧮 試算</button><button type="button" role="tab" data-tabbtn="rates">📋 費率</button></nav><section class="panel" data-tab="overview"><h2>整趟購物累計</h2><div class="grid"><div class="total"><div class="muted">購物總額</div><div class="big" id="totalSpent">¥0</div></div><div class="total"><div class="muted">預估實拿退款</div><div class="big" id="totalNet">¥0</div></div></div><p class="notice warn" id="pendingWarn"></p><div class="row"><span>原始消費稅合計</span><span id="totalTax">¥0</span></div><div class="row"><span>店家費合計</span><span id="totalMerchant">¥0</span></div><div class="row"><span>現金領款費合計</span><span id="totalCash">¥0</span></div><div class="row"><span>取整調整合計</span><span id="totalRound">¥0</span></div><div class="row"><span>退稅後實際支出合計</span><span id="totalAfter">¥0</span></div><div class="row"><span>購物筆數</span><span id="count">0</span></div><div id="records"></div></section><section class="panel" data-tab="overview"><h2>雲端同步（Google Sheet）</h2><p class="sub">所有購物紀錄都儲存在 Google Sheet（多人共用同一份）。此裝置只記住下方連線設定，不會寫進原始碼；未同步完成前請勿關閉頁面。</p><div class="field"><label for="syncUrl">Apps Script 網址（/exec）</label><input id="syncUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div class="grid"><div class="field"><label for="syncKey">密碼</label><input id="syncKey" type="password" autocomplete="off"></div><div class="field"><label for="syncAuthor">顯示名稱（記錄者）</label><input id="syncAuthor" type="text" maxlength="20" autocomplete="off"></div></div><div class="btns"><button class="primary" id="syncSave">儲存並同步</button><button id="syncNow">立即同步</button><button id="syncClear" class="danger">清除設定</button></div><p class="status" id="syncStatus" role="status"></p></section><section class="panel" data-tab="calc" hidden><h2>新增／修改購物</h2><div class="field"><label for="brand">品牌</label><select id="brand"></select></div><div class="grid"><div class="field"><label for="amount">含稅購物金額 ¥</label><input id="amount" type="number" min="0" step="1" value="11000" inputmode="decimal"></div><div class="field"><label for="tax">消費稅率</label><select id="tax"><option value="10">10%</option><option value="8">8%</option></select></div><div class="field"><label for="basis">店家費用計算基準</label><select id="basis"><option value="refund">原始消費稅額</option><option value="pretax">未稅購物金額</option><option value="gross">含稅購物金額</option><option value="fixed">固定金額 ¥／筆</option></select></div><div class="field"><label for="fee" id="feeLabel">店家／平台費率 %</label><input id="fee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="待確認（留空）"></div><div class="field"><label for="rateStatus">費率確認狀態</label><select id="rateStatus"><option value="confirmed">已確認（依收據／官方）</option><option value="reference">參考值（待官方核實）</option><option value="unknown">待確認</option></select></div><div class="field"><label for="cashFee">現金領款服務費 %</label><input id="cashFee" type="number" min="0" max="100" step="0.1" value="10"></div><div class="field"><label for="minutes">額外辦理時間（分鐘）</label><input id="minutes" type="number" min="0" step="1" value="10"></div></div><div class="field"><label><input type="checkbox" id="cash" checked> 計算 Cash Japan 現金領款費（資格待官方確認）</label></div><div class="field"><label><input type="checkbox" id="round"> 模擬現金向下調整至 ¥50 單位（規則待確認）</label></div><div class="total"><div class="muted" id="netLabel">本筆預估實拿</div><div class="big" id="net">¥0</div><div class="row"><span>原始消費稅</span><span id="taxValue">—</span></div><div class="row"><span>店家／平台費</span><span id="merchantValue">—</span></div><div class="row"><span>現金領款費</span><span id="cashValue">—</span></div><div class="row"><span>取整調整</span><span id="roundValue">—</span></div><div class="row"><span>每分鐘退款效益</span><span id="minuteValue">—</span></div></div><p class="notice" id="brandInfo"></p><p class="notice" id="uncertainty"></p><div class="btns"><button class="primary" id="add">加入購物清單</button><button id="cancel" style="display:none">取消修改</button></div><p class="status" id="status" role="status"></p></section><section class="panel" data-tab="rates" hidden><h2>各家費率與確認狀態</h2><p class="sub">以下皆為研究整理值，<b>尚無任何項目取得官方逐店核實</b>。退款平台未逐店核實，不列入。請依收據修正並將狀態改為「已確認」。</p><div id="feeDirectory"></div></section><p class="notice">本工具僅估算費率，不判定免稅資格、商品是否符合規定、平台合作、海關確認或實際退款。2026-11-01 新制的門檻、期限與流程請以國稅廳／海關公告為準。請勿輸入護照、信用卡等敏感資料。</p></main><script>
 (function(){'use strict';
-const $=id=>document.getElementById(id),KEY='hokkaido_tax_v9',OLDKEYS=['hokkaido_tax_v8_records','hokkaido_tax_v7_records'],DB_NAME='hokkaido_tax',STORE='kv';
+const $=id=>document.getElementById(id);
 /* [品牌, 費率(null=未知), 基準, 狀態(reference|unknown), 備註] */
 const catalog=[
  ['UNIQLO',10,'refund','reference','退款額 10%（依原始可退稅額計）'],
@@ -77,60 +76,30 @@ const catalog=[
 const ALIAS={'大丸札幌':'大丸／松坂屋','PARCO／ARIO':'PARCO'};
 const brands=Object.fromEntries(catalog.map(([name,fee,basis,status,note])=>[name,{fee,basis,status,note}]));
 const STATUS_TEXT={confirmed:'已確認',reference:'參考',unknown:'待確認'};
-let records=[],meta={lastBackupAt:null,changes:0},editing=null,db=null,backend='無',persisted=null,saveError=false;
+let records=[],editing=null,dirty=false,version=0;
 const yen=n=>'¥'+Math.round(Number(n)||0).toLocaleString('en-US');
 const num=id=>Math.max(0,Number($(id).value)||0);
 const feeVal=()=>{const v=$('fee').value.trim();return v===''||!Number.isFinite(Number(v))?null:Math.max(0,Number(v))};
 function brandOf(name){return brands[ALIAS[name]||name]||brands['其他']}
+const live=()=>records.filter(r=>!r.deleted);
 function tag(status){const s=document.createElement('span');s.className='tag '+status;s.textContent=STATUS_TEXT[status]||'待確認';return s}
 
-/* ---------- 儲存層：IndexedDB 為主，localStorage 鏡像備援 ---------- */
+/* ---------- 資料：以 Google Sheet 為唯一儲存；本機僅暫存於記憶體 ---------- */
 function withTimeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(Error('timeout')),ms))])}
-function idbOpen(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(Error('no indexedDB'));const q=indexedDB.open(DB_NAME,1);q.onupgradeneeded=()=>q.result.createObjectStore(STORE);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);q.onblocked=()=>rej(Error('blocked'))})}
-function idbGet(k){return new Promise((res,rej)=>{const r=db.transaction(STORE).objectStore(STORE).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function idbPut(obj){return new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite'),s=t.objectStore(STORE);for(const k in obj)s.put(obj[k],k);t.oncomplete=()=>res();t.onerror=t.onabort=()=>rej(t.error)})}
 function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
-function lsSet(v){try{localStorage.setItem(KEY,JSON.stringify(v));return true}catch(e){return false}}
-async function save(countChange=true){
- if(countChange)meta.changes++;
- let idbOk=false,lsOk=false;
- if(db){try{await idbPut({records,meta});idbOk=true}catch(e){db=null}}
- lsOk=lsSet({records,meta});
- backend=idbOk?'IndexedDB':lsOk?'localStorage':'僅記憶體';
- saveError=!(idbOk||lsOk);
- renderStorage();
- return !saveError;
-}
+function save(){version++;dirty=true;scheduleSync()}
 function normalize(r,i){
  const b=brandOf(r.brand),fee=r.fee===null||r.fee===undefined?(Number.isFinite(r.fee)?r.fee:null):Number(r.fee);
  let rateStatus=['confirmed','reference','unknown'].includes(r.rateStatus)?r.rateStatus:b.status;
  const feeFinal=r.fee===undefined?b.fee:fee;
  if(feeFinal===null)rateStatus='unknown';
- return {...r,id:r.id||('import-'+i+'-'+Date.now()),brand:ALIAS[r.brand]||r.brand,fee:feeFinal,basis:r.basis||b.basis,rateStatus,platformName:'unknown',
+ return {...r,id:r.id||('import-'+i+'-'+Date.now()),brand:ALIAS[r.brand]||r.brand,fee:feeFinal,basis:r.basis||b.basis,rateStatus,platformName:'unknown',author:typeof r.author==='string'?r.author:'',updatedAt:String(r.updatedAt||r.createdAt||new Date().toISOString()),deleted:r.deleted===true,
   merchant:Number.isFinite(r.merchant)?r.merchant:Math.max(0,r.tax-r.net-(r.cash||0)),cash:r.cash||0,createdAt:r.createdAt||''};
 }
 function validate(list){
  if(!Array.isArray(list)||list.length>5000)throw Error('格式不正確');
  return list.map((r,i)=>{if(!r||typeof r.brand!=='string'||!Number.isFinite(r.amount)||!Number.isFinite(r.tax)||!Number.isFinite(r.net)||r.amount<0||r.tax<0||r.net<0)throw Error('第 '+(i+1)+' 筆資料欄位不完整');return normalize(r,i)});
 }
-async function load(){
- try{db=await withTimeout(idbOpen(),3000)}catch(e){db=null}
- let rec,m,from='';
- if(db){try{rec=await idbGet('records');m=await idbGet('meta');if(rec)from='IndexedDB'}catch(e){}}
- if(!rec){const v9=lsGet(KEY);if(v9&&Array.isArray(v9.records)){rec=v9.records;m=v9.meta;from='localStorage'}}
- if(!rec){for(const k of OLDKEYS){const old=lsGet(k);if(Array.isArray(old)&&old.length){rec=old;from='舊版（'+k+'）';break}}}
- try{records=validate(rec||[]);if(m&&typeof m==='object')meta={lastBackupAt:m.lastBackupAt||null,changes:Number(m.changes)||0}}catch(e){records=[];$('status').textContent='讀取紀錄失敗：'+e.message+'。請由備份還原。'}
- try{if(navigator.storage&&navigator.storage.persisted){persisted=await navigator.storage.persisted();if(!persisted&&navigator.storage.persist)persisted=await navigator.storage.persist()}}catch(e){}
- await save(false);
- if(from.startsWith('舊版'))$('status').textContent='已由'+from+'載入並遷移 '+records.length+' 筆；舊版 0% 的未知品牌已標為待確認。';
-}
-function renderStorage(){
- $('storageStatus').textContent=(saveError?'⚠️ 無法儲存，重新開啟會遺失紀錄，請立即備份。':'✓ 已儲存至 '+backend+'（'+records.length+' 筆）')+'｜持久化保護：'+(persisted===true?'已授予':persisted===false?'瀏覽器未授予':'不支援');
- const el=$('backupReminder');
- el.textContent=(meta.lastBackupAt?'上次備份：'+new Date(meta.lastBackupAt).toLocaleString():'尚未備份')+(meta.changes>0?'｜備份後已變更 '+meta.changes+' 次':'');
- el.className='notice'+((!meta.lastBackupAt&&records.length)||meta.changes>=5?' warn':'');
-}
-
 /* ---------- 計算 ---------- */
 function calc(){
  const amount=num('amount'),rate=num('tax')/100,pretax=amount/(1+rate),tax=amount-pretax,basis=$('basis').value,fee=feeVal();
@@ -138,8 +107,8 @@ function calc(){
  const baseAmt=basis==='gross'?amount:basis==='pretax'?pretax:tax;
  const merchant=fee===null?0:Math.min(tax,Math.max(0,basis==='fixed'?fee:baseAmt*fee/100));
  const after=Math.max(0,tax-merchant),cash=$('cash').checked?after*num('cashFee')/100:0,raw=Math.max(0,after-cash),step=$('round').checked?50:1,net=Math.floor(raw/step)*step;
- const old=editing!==null?records[editing]:null;
- return {id:old?old.id:(Date.now()+'-'+Math.random().toString(36).slice(2,8)),brand:$('brand').value,amount,taxRate:num('tax'),fee,basis,rateStatus,platformName:'unknown',cashEnabled:$('cash').checked,cashFee:num('cashFee'),round:$('round').checked,minutes:num('minutes'),tax,merchant,cash,net,createdAt:old?old.createdAt:new Date().toISOString()};
+ const old=editing!==null?records.find(x=>x.id===editing):null;
+ return {id:old?old.id:(Date.now()+'-'+Math.random().toString(36).slice(2,8)),brand:$('brand').value,amount,taxRate:num('tax'),fee,basis,rateStatus,platformName:'unknown',cashEnabled:$('cash').checked,cashFee:num('cashFee'),round:$('round').checked,minutes:num('minutes'),tax,merchant,cash,net,createdAt:old?old.createdAt:new Date().toISOString(),author:(old&&old.author)||syncCfg().author,updatedAt:new Date().toISOString(),deleted:false};
 }
 function renderCalc(){
  const r=calc(),b=brandOf(r.brand),pending=r.rateStatus==='unknown';
@@ -164,44 +133,69 @@ function renderDirectory(){
   const c=document.createElement('span');c.append(tag(status));row.append(a,b,c);box.append(row)});
 }
 function render(){
- let spent=0,tax=0,net=0,merchant=0,cash=0,pend=0;const box=$('records');box.replaceChildren();
- records.forEach((r,i)=>{spent+=r.amount;tax+=r.tax;net+=r.net;merchant+=r.merchant||0;cash+=r.cash||0;if(r.rateStatus==='unknown')pend++;
+ let spent=0,tax=0,net=0,merchant=0,cash=0,pend=0,n=0;const box=$('records');box.replaceChildren();
+ records.forEach(r=>{if(r.deleted)return;n++;spent+=r.amount;tax+=r.tax;net+=r.net;merchant+=r.merchant||0;cash+=r.cash||0;if(r.rateStatus==='unknown')pend++;
   const el=document.createElement('div');el.className='record';
-  const top=document.createElement('div');top.className='row';const name=document.createElement('strong');name.textContent=(i+1)+'. '+r.brand+' ';name.append(tag(r.rateStatus));
+  const top=document.createElement('div');top.className='row';const name=document.createElement('strong');name.textContent=n+'. '+r.brand+' ';name.append(tag(r.rateStatus));
   const price=document.createElement('strong');price.textContent=yen(r.net);top.append(name,price);
-  const d=document.createElement('div');d.className='muted';d.textContent='消費 '+yen(r.amount)+' · 稅 '+r.taxRate+'% · 店家費 '+(r.rateStatus==='unknown'?'待確認':yen(r.merchant||0))+' · 領現費 '+yen(r.cash||0);
+  const d=document.createElement('div');d.className='muted';d.textContent='消費 '+yen(r.amount)+' · 稅 '+r.taxRate+'% · 店家費 '+(r.rateStatus==='unknown'?'待確認':yen(r.merchant||0))+' · 領現費 '+yen(r.cash||0)+(r.author?' · 記錄者 '+r.author:'');
   const c=document.createElement('div');c.className='btns';
-  const e=document.createElement('button');e.textContent='編輯';e.addEventListener('click',()=>editRecord(i));
-  const x=document.createElement('button');x.textContent='刪除';x.className='danger';x.addEventListener('click',async()=>{if(!confirm('確定刪除這筆購物紀錄？'))return;records.splice(i,1);if(editing!==null)resetEdit();await save();render()});
+  const e=document.createElement('button');e.textContent='編輯';e.addEventListener('click',()=>editRecord(r.id));
+  const x=document.createElement('button');x.textContent='刪除';x.className='danger';x.addEventListener('click',()=>{if(!confirm('確定刪除這筆購物紀錄？'))return;const i=records.findIndex(y=>y.id===r.id);if(i<0)return;records[i]={...records[i],deleted:true,updatedAt:new Date().toISOString()};if(editing===r.id)resetEdit();save();render()});
   c.append(e,x);el.append(top,d,c);box.append(el)});
- if(!records.length){const p=document.createElement('p');p.className='sub';p.textContent='尚無購物紀錄，請先加入一筆。';box.append(p)}
+ if(!n){const p=document.createElement('p');p.className='sub';p.textContent='尚無購物紀錄，請先加入一筆。';box.append(p)}
  $('totalSpent').textContent=yen(spent);$('totalNet').textContent=yen(net);$('totalTax').textContent=yen(tax);$('totalMerchant').textContent=yen(merchant);$('totalCash').textContent=yen(cash);
- $('totalRound').textContent=yen(tax-merchant-cash-net);$('totalAfter').textContent=yen(spent-net);$('count').textContent=String(records.length);
+ $('totalRound').textContent=yen(tax-merchant-cash-net);$('totalAfter').textContent=yen(spent-net);$('count').textContent=String(n);
  $('pendingWarn').textContent=pend?'⚠️ 其中 '+pend+' 筆店家費率待確認，實拿為未扣店家費的上限。':'';
- renderStorage();
 }
-function editRecord(i){
- const r=records[i];editing=i;
+function editRecord(id){
+ const r=records.find(x=>x.id===id);if(!r)return;editing=id;
  $('brand').value=r.brand;['amount','basis','cashFee','minutes','rateStatus'].forEach(k=>$(k).value=r[k]);
  $('fee').value=r.fee===null?'':r.fee;$('tax').value=r.taxRate;$('cash').checked=r.cashEnabled!==false;$('round').checked=!!r.round;
- $('add').textContent='儲存這筆修改';$('cancel').style.display='inline-block';$('status').textContent='正在編輯第 '+(i+1)+' 筆';renderCalc();showTab('calc');
+ $('add').textContent='儲存這筆修改';$('cancel').style.display='inline-block';$('status').textContent='正在編輯：'+r.brand+' '+yen(r.amount);renderCalc();showTab('calc');
 }
 function showTab(t){document.querySelectorAll('[data-tabbtn]').forEach(x=>x.classList.toggle('active',x.dataset.tabbtn===t));document.querySelectorAll('[data-tab]').forEach(x=>x.hidden=x.dataset.tab!==t);window.scrollTo(0,0)}
 function resetEdit(){editing=null;$('add').textContent='加入購物清單';$('cancel').style.display='none'}
 
-/* ---------- 備份／還原 ---------- */
-function backup(){return JSON.stringify({version:9,exportedAt:new Date().toISOString(),records},null,2)}
-async function markBackedUp(){meta.lastBackupAt=new Date().toISOString();meta.changes=0;await save(false)}
-function showBackup(){$('backupBox').style.display='block';$('backupText').value=backup()}
-function saveBlob(){const blob=new Blob([backup()],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='北海道退稅購物紀錄_V9_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-async function restore(text){
+/* ---------- 雲端同步（Apps Script + Google Sheet） ---------- */
+const SYNC_KEY='hokkaido_tax_v9_sync',SYNC_URL_RE=/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
+let syncing=false,syncAgain=false,syncTimer=null,lastSyncTry=0;
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxbAqYxxI93P3p3y_3gj3Eb1NJ0-SjQSBXY1OBvVnSe1HBMQCXbmY63kyJnVCduqooi/exec';
+function syncCfg(){const c=lsGet(SYNC_KEY)||{};return {url:c.url||DEFAULT_URL,key:c.key||'',author:c.author||''}}
+function setSync(t,bad){const e=$('syncStatus');e.textContent=t;e.style.color=bad?'#e11d48':''}
+function fillSync(){const c=syncCfg();$('syncUrl').value=c.url;$('syncKey').value=c.key;$('syncAuthor').value=c.author}
+function scheduleSync(){if(!syncCfg().key)return;clearTimeout(syncTimer);syncTimer=setTimeout(sync,500)}
+function tolerant(list){const out=[];let bad=0;(Array.isArray(list)?list:[]).forEach(r=>{try{out.push(validate([r])[0])}catch(e){bad++}});return {out,bad}}
+async function sync(){
+ const c=syncCfg();if(!c.url||!c.key)return;
+ if(syncing){syncAgain=true;return}
+ syncing=true;setSync('同步中…');const v0=version;
  try{
-  const data=JSON.parse(text),next=validate(Array.isArray(data)?data:data&&data.records);
-  if(!confirm('還原將覆蓋目前 '+records.length+' 筆紀錄，確定繼續？'))return;
-  records=next;resetEdit();const ok=await save();render();
-  $('backupStatus').textContent='已還原 '+records.length+' 筆紀錄。'+(ok?'':'但無法儲存，請另行備份。');
- }catch(e){$('backupStatus').textContent='無法還原：'+e.message}
+  const res=await withTimeout(fetch(c.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:c.key,records}),redirect:'follow'}),20000);
+  const data=await res.json();
+  if(!data.ok)throw Error(data.error==='unauthorized'?'密碼不正確':String(data.error));
+  const {out,bad}=tolerant(data.records),map=new Map(records.map(r=>[r.id,r]));
+  out.forEach(r=>{const l=map.get(r.id);if(!l||String(r.updatedAt)>String(l.updatedAt))map.set(r.id,r)});
+  records=[...map.values()].sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+  if(version===v0)dirty=false;
+  render();
+  setSync('✓ 已同步（'+live().length+' 筆）'+new Date().toLocaleTimeString()+(bad?'｜略過 '+bad+' 筆格式不正確的雲端資料':''));
+ }catch(e){
+  const net=e.message==='timeout'||e instanceof TypeError,fmt=e instanceof SyntaxError;
+  setSync('同步失敗：'+(net?'網路無法連線':fmt?'回應格式錯誤，請確認部署的存取權限為「所有人」':e.message)+(dirty?'。變更暫存在本頁，連線後會自動重試，請勿關閉頁面':''),true);
+  if(dirty&&!syncAgain){clearTimeout(syncTimer);syncTimer=setTimeout(sync,15000)}
+ }finally{syncing=false;if(syncAgain){syncAgain=false;scheduleSync()}}
 }
+$('syncSave').addEventListener('click',()=>{
+ const url=$('syncUrl').value.trim(),key=$('syncKey').value,author=$('syncAuthor').value.trim();
+ if(!SYNC_URL_RE.test(url)){setSync('網址格式不正確，應為 https://script.google.com/macros/s/…/exec',true);return}
+ if(!key){setSync('請輸入密碼',true);return}
+ try{localStorage.setItem(SYNC_KEY,JSON.stringify({url,key,author}))}catch(e){setSync('無法儲存設定（瀏覽器禁止儲存）',true);return}
+ sync();
+});
+$('syncNow').addEventListener('click',()=>{if(!syncCfg().key){setSync('請先輸入密碼並按「儲存並同步」',true);return}sync()});
+$('syncClear').addEventListener('click',()=>{if(!confirm('清除此裝置上的同步設定？雲端資料不受影響，但這支裝置將無法讀寫，需重新填寫。'))return;try{localStorage.removeItem(SYNC_KEY)}catch(e){}fillSync();setSync('已清除設定')});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&syncCfg().key&&Date.now()-lastSyncTry>30000){lastSyncTry=Date.now();sync()}});
 
 /* ---------- 事件 ---------- */
 $('brand').append(...catalog.map(([n])=>{const o=document.createElement('option');o.textContent=n;return o}));
@@ -209,17 +203,14 @@ for(const id of ['amount','tax','fee','basis','rateStatus','cashFee','minutes','
 $('brand').addEventListener('change',applyBrand);
 $('add').addEventListener('click',async()=>{
  const r=calc();if(r.amount<=0){$('status').textContent='請先輸入大於 0 的購物金額。';return}
- if(editing===null){records.push(r)}else{records[editing]=r;resetEdit()}
- const ok=await save();render();$('status').textContent=ok?'已儲存！':'已加入但無法永久儲存，請立即備份。';
+ if(!syncCfg().key){$('status').textContent='請先到「總覽」輸入雲端同步密碼，紀錄才會被儲存。';return}
+ const idx=editing===null?-1:records.findIndex(x=>x.id===editing);if(idx<0)records.push(r);else records[idx]=r;if(editing!==null)resetEdit();
+ save();render();$('status').textContent='已加入，同步至 Google Sheet 中…';
 });
 $('cancel').addEventListener('click',()=>{resetEdit();$('status').textContent='已取消修改'});
-$('copy').addEventListener('click',async()=>{showBackup();try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(backup());await markBackedUp();$('backupStatus').textContent='已複製備份文字！'}else throw Error('clipboard unavailable')}catch(e){$('backupText').focus();$('backupText').select();$('backupStatus').textContent='請長按下方文字並選擇全選／拷貝（完成後請再按一次「下載 JSON」或自行保存）。'}});
-$('download').addEventListener('click',async()=>{showBackup();try{saveBlob();await markBackedUp();$('backupStatus').textContent='已要求下載 JSON；請確認下載項目有檔案。'}catch(e){$('backupStatus').textContent='無法下載，請改用備份文字。'}});
-$('show').addEventListener('click',()=>{if($('backupBox').style.display==='block')$('backupBox').style.display='none';else showBackup()});
-$('restore').addEventListener('click',()=>restore($('backupText').value));
-$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{await restore(await f.text())}catch(err){$('backupStatus').textContent='讀取檔案失敗：'+err.message}e.target.value=''});
 document.querySelectorAll('[data-tabbtn]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tabbtn)));
-renderDirectory();applyBrand();render();
-load().then(()=>{render();renderCalc()});
+fillSync();renderDirectory();applyBrand();render();
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+if(syncCfg().key)sync();else setSync('尚未設定雲端同步：請輸入密碼並按「儲存並同步」，紀錄才能儲存與共用。',true);
 })();
 </script></body></html>
